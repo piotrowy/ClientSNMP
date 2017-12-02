@@ -24,13 +24,13 @@ const (
 )
 
 //returns true if regex is found
-type MibRegEx func(s string) bool
+type fnMibRegEx func(s string) bool
 
 func Parse(t *Tree, mib string) {
 
 }
 
-func ParseMibRegEx(path string, fn MibRegEx) bool {
+func ParseMibRegEx(path string, fn fnMibRegEx) bool {
 	data := readFile(path)
 	return fn(data)
 }
