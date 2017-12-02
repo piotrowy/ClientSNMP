@@ -1,4 +1,4 @@
-package util
+package assert
 
 type Predicate func () bool
 
