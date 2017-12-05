@@ -1,23 +1,27 @@
 package mib
 
 import (
-	o "../oid"
 	"fmt"
 	"bytes"
 	"sort"
 	"../util/leftpad"
 )
 
-const TAB = '\t'
+const (
+	tab  = '\t'
+	none = ""
+)
 
-type Tree struct {
-	root *node
-	size int
-}
+type (
+	Tree struct {
+		root *node
+		size int
+	}
 
-type WalkFn func(n node) bool
+	WalkFn func(n node) bool
+)
 
-func New(oid o.Oid, val ObjectType) Tree {
+func New(oid Oid, val ObjectType) Tree {
 	return Tree{
 		root: &node{
 			parent:   nil,
@@ -35,33 +39,36 @@ func (t *Tree) Len() int {
 }
 
 func (t *Tree) Walk(fn WalkFn) {
-	recursiveDfsWalk(*t.root, fn)
+	recursiveDfsWalk(t.root, fn)
 }
 
-func (t *Tree) Insert(id o.Oid, val ObjectType) {
-	t.root.findByOid(id.ParentOid()).insert(id, val)
+func (t *Tree) Insert(id Oid, val ObjectType) {
+	n := t.root.findByOid(id.Parent())
+	n.insert(id, val)
 	t.size += 1
 }
 
-func (t *Tree) Delete(id o.Oid) {
-	t.root.findByOid(id.ParentOid()).delete(id)
+func (t *Tree) Delete(id Oid) {
+	n := t.root.findByOid(id.Parent())
+	n.delete(id)
 	t.size -= 1
 }
 
-func (t *Tree) FindByOid(id o.Oid) interface{} {
-	return t.root.findByOid(id).val
+func (t *Tree) FindByOid(id Oid) (Oid, ObjectType) {
+	n := t.root.findByOid(id)
+	return n.id, n.val
 }
 
 func (t *Tree) String() string {
-	return t.root.string(t.root.id)
+	return t.root.string(ShortOid(none))
 }
 
-func (t *Tree) PrintToNode(id o.Oid) {
-	t.root.string(id)
+func (t *Tree) SubtreeString(id Oid) string {
+	return t.root.string(id)
 }
 
-func (t *Tree) toMap() map[string]interface{} {
-	out := make(map[string]interface{})
+func (t *Tree) toMap() map[string]ObjectType {
+	out := make(map[string]ObjectType)
 	t.Walk(func(n node) bool {
 		out[n.id.Value] = n.val
 		return false
@@ -72,15 +79,15 @@ func (t *Tree) toMap() map[string]interface{} {
 type node struct {
 	parent   *node
 	children children
-	id       o.Oid
+	id       Oid
 	val      ObjectType
 	height   int
 }
 
-func (n node) insert(id o.Oid, val ObjectType) {
-	if n.id == id.ParentOid() && n.indexOf(id) == -1 {
+func (n *node) insert(id Oid, val ObjectType) {
+	if n.id == id.Parent() && n.indexOf(id) == -1 {
 		n.children = append(n.children, &node{
-			parent:   &n,
+			parent:   n,
 			children: []*node{},
 			id:       id,
 			val:      val,
@@ -91,30 +98,30 @@ func (n node) insert(id o.Oid, val ObjectType) {
 	panic(fmt.Errorf("id does not match or already exists: %v", id))
 }
 
-func (n node) delete(id o.Oid) {
+func (n *node) delete(id Oid) {
 	i := n.indexOf(id)
 	if i >= 0 {
 		n.children = append(n.children[:i], n.children[i+1:]...)
 	}
 }
 
-func (n node) findByOid(id o.Oid) node {
-	if n.id == id {
-		return n
+func (n *node) findByOid(id Oid) node {
+	if n.id.Value == id.Value {
+		return *n
 	}
 	for _, n := range n.children {
-		if _, err := id.MatchOid((*n).id); err == nil {
+		if _, err := id.Match((*n).id); err == nil {
 			return (*n).findByOid(id)
 		}
 	}
 	panic(fmt.Errorf("cannot find id: %v", id))
 }
 
-func (n node) string(id o.Oid) string {
+func (n *node) string(id Oid) string {
 	var buff bytes.Buffer
-	bfsWalk(&n, func(n node) bool {
-		buff.WriteString(leftpad.PadChar(fmt.Sprintf("=> %v\n", n.id.Name), n.height, TAB))
-		if n.id == id {
+	bfsWalk(n, func(n node) bool {
+		buff.WriteString(leftpad.PadChar(fmt.Sprintf("=> %v\n", n.id.Name), n.height, tab))
+		if n.id.Value == id.Value {
 			n.writeChildren(buff)
 			return true
 		}
@@ -123,13 +130,32 @@ func (n node) string(id o.Oid) string {
 	return buff.String()
 }
 
+func (n *node) writeChildren(b bytes.Buffer) {
+	for _, c := range n.children {
+		b.WriteString("\n")
+		for i := 0; i < c.height; i++ {
+			b.WriteString("    ")
+		}
+		b.WriteString(fmt.Sprintf("=> %v", c.id.Name))
+	}
+}
+
+func (n *node) indexOf(id Oid) int {
+	for i, v := range n.children {
+		if v.id == id {
+			return i
+		}
+	}
+	return -1
+}
+
 //recursiveWalk returns true if it should be aborted
-func recursiveDfsWalk(n node, fn WalkFn) bool {
-	if fn(n) {
+func recursiveDfsWalk(n *node, fn WalkFn) bool {
+	if fn(*n) {
 		return true
 	}
 	for _, n := range n.children {
-		if recursiveDfsWalk(*n, fn) {
+		if recursiveDfsWalk(n, fn) {
 			return true
 		}
 	}
@@ -147,25 +173,6 @@ func bfsWalk(n *node, fn WalkFn) bool {
 		}
 	}
 	return false
-}
-
-func (n node) writeChildren(b bytes.Buffer) {
-	for _, c := range n.children {
-		b.WriteString("\n")
-		for i := 0; i < c.height; i++ {
-			b.WriteString("    ")
-		}
-		b.WriteString(fmt.Sprintf("=> %v", c.id.Name))
-	}
-}
-
-func (n node) indexOf(id o.Oid) int {
-	for i, v := range n.children {
-		if v.id == id {
-			return i
-		}
-	}
-	return -1
 }
 
 type children []*node

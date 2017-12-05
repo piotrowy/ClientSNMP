@@ -1,4 +1,4 @@
-package oid
+package mib
 
 import "testing"
 
@@ -9,19 +9,19 @@ const (
 )
 
 var (
-	oid    = New(VALUE, NAME)
-	oidParent = New(PARENT, PARENT)
+	oid    = NewOid(VALUE, NAME, "", 0)
+	oidParent = NewOid(PARENT, PARENT,"", 0)
 )
 
 func TestParentOid(t *testing.T) {
-	parent := oid.ParentOid()
+	parent := oid.Parent()
 	if parent.Name != PARENT && parent.Value == PARENT {
 		t.Errorf("Parent oid is different than expected")
 	}
 }
 
 func TestMatchOid(t *testing.T) {
-	if _, ok := oid.MatchOid(oidParent); ok != nil {
+	if _, ok := oid.Match(oidParent); ok != nil {
 		t.Errorf("Matching wet wrong.")
 	}
 }
