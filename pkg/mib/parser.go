@@ -30,7 +30,10 @@ const (
 type fnMibRegEx func(s string) bool
 
 func Parse(t *Tree, mib string) bool {
+	var importedElements []string
+
 	getElements := func(data string) bool {
+		importedElements = []string{}
 		return false
 	}
 
@@ -39,8 +42,9 @@ func Parse(t *Tree, mib string) bool {
 		importGroups := regexp.MustCompile(imports_groups_regex).FindString(importSection)
 		getElements(importGroups)
 
+		oidLines := regexp.MustCompile(object_identifier_data_regex).FindStringSubmatch(data)
+		fmt.Print(oidLines)
 		return false
-
 	})
 }
 
