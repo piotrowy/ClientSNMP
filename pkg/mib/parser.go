@@ -9,7 +9,6 @@ import (
 
 const (
 	mibDir     = "/mibs/"
-	mibList    = "/pkg/mib/MIBLIST"
 	currentDir = "./"
 )
 
@@ -31,25 +30,26 @@ const (
 type fnMibRegEx func(s string) bool
 
 func Parse(t *Tree, mib string) bool {
-	if !fileExist(mib) {
+	getElements := func(data string) bool {
 		return false
 	}
 
-	return parse(mib, func(data string) bool {
+	return ParseFn(mib, func(data string) bool {
 		importSection := regexp.MustCompile(imports_section_regex).FindString(data)
 		importGroups := regexp.MustCompile(imports_groups_regex).FindString(importSection)
-		fmt.Print(importGroups)
+		getElements(importGroups)
+
 		return false
 
 	})
 }
 
-func parse(name string, fn fnMibRegEx) bool {
+func ParseFn(mib string, fn fnMibRegEx) bool {
 	projectDir, err := filepath.Abs(currentDir)
 	if err != nil {
-		return false
+		panic(err)
 	}
-	data := readFile(projectDir + mibDir + name)
+	data := readFile(projectDir + mibDir + mib)
 	return fn(data)
 }
 
@@ -59,13 +59,4 @@ func readFile(f string) string {
 		panic(err)
 	}
 	return string(dat)
-}
-
-func fileExist(name string) bool {
-	if p, err := filepath.Abs(currentDir); err == nil {
-		if b, err := regexp.MatchString(name, readFile(p+mibList)); err == nil {
-			return b
-		}
-	}
-	return false
 }

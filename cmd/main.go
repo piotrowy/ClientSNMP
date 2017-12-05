@@ -15,7 +15,6 @@ func main() {
 		fmt.Print(t)
 		mainLoop(&t)
 	}
-	fmt.Print("END")
 }
 
 func mainLoop(t *mib.Tree) {
