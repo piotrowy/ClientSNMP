@@ -2,14 +2,14 @@ package mib
 
 import (
 	"fmt"
-	"bytes"
 	"sort"
+	"bytes"
+
 	"../util/leftpad"
 )
 
 const (
 	tab  = '\t'
-	none = ""
 )
 
 type (
@@ -43,27 +43,34 @@ func (t *Tree) Walk(fn WalkFn) {
 }
 
 func (t *Tree) Insert(id Oid, val ObjectType) {
-	n := t.root.findByOid(id.Parent())
-	n.insert(id, val)
-	t.size += 1
+	n, err := t.root.findByOid(id)
+	if err != nil {
+		n.parent.insert(id, val)
+		t.size += 1
+	}
 }
 
 func (t *Tree) Delete(id Oid) {
-	n := t.root.findByOid(id.Parent())
-	n.delete(id)
-	t.size -= 1
+	n, err := t.root.findByOid(id)
+	if err != nil {
+		n.parent.delete(id)
+		t.size -= 1
+	}
 }
 
-func (t *Tree) FindByOid(id Oid) (Oid, ObjectType) {
-	n := t.root.findByOid(id)
-	return n.id, n.val
+func (t *Tree) FindByOid(id Oid) (Oid, ObjectType, error) {
+	n, err := t.root.findByOid(id)
+	return n.id, n.val, err
 }
 
 func (t *Tree) String() string {
-	return t.root.string(ShortOid(none))
+	return t.root.string(Oid{})
 }
 
 func (t *Tree) SubtreeString(id Oid) string {
+	if _, _, err := t.FindByOid(id); err != nil {
+		panic(err)
+	}
 	return t.root.string(id)
 }
 
@@ -85,7 +92,7 @@ type node struct {
 }
 
 func (n *node) insert(id Oid, val ObjectType) {
-	if n.id == id.Parent() && n.indexOf(id) == -1 {
+	if n.indexOf(id) == -1 {
 		n.children = append(n.children, &node{
 			parent:   n,
 			children: []*node{},
@@ -95,7 +102,6 @@ func (n *node) insert(id Oid, val ObjectType) {
 		})
 		n.children.Sort()
 	}
-	panic(fmt.Errorf("id does not match or already exists: %v", id))
 }
 
 func (n *node) delete(id Oid) {
@@ -105,16 +111,21 @@ func (n *node) delete(id Oid) {
 	}
 }
 
-func (n *node) findByOid(id Oid) node {
-	if n.id.Value == id.Value {
-		return *n
-	}
-	for _, n := range n.children {
-		if _, err := id.Match((*n).id); err == nil {
-			return (*n).findByOid(id)
+func (n *node) findByOid(id Oid) (node, error) {
+	var res node
+	ok := recursiveDfsWalk(n, func(node node) bool {
+		if node.id == id {
+			res = node
+			return true
 		}
+		return false
+	})
+
+	if ok {
+		return res, nil
+	} else {
+		return node{}, fmt.Errorf("cannot find id: %v", id)
 	}
-	panic(fmt.Errorf("cannot find id: %v", id))
 }
 
 func (n *node) string(id Oid) string {
@@ -147,6 +158,15 @@ func (n *node) indexOf(id Oid) int {
 		}
 	}
 	return -1
+}
+
+func (n node) name() (r string) {
+	if n.id != (Oid{}) {
+		r = fmt.Sprintf("{%v}: {%v}", n.id.Number, n.id.Name)
+	} else {
+		r = fmt.Sprintf("{%v}: {%v}", n.val.Number, n.val.Name)
+	}
+	return
 }
 
 //recursiveWalk returns true if it should be aborted

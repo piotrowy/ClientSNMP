@@ -1,11 +1,8 @@
 package mib
 
 import (
-	"strings"
-	"regexp"
+	"fmt"
 )
-
-const separator = "."
 
 type Oid struct {
 	Value  string
@@ -14,38 +11,37 @@ type Oid struct {
 	Number int
 }
 
-func (oid *Oid) Parent() (o Oid) {
-	arr := strings.Split(oid.Value, separator)
-	o.Name = arr[len(arr)-2]
-	for _, v := range arr[:len(arr)-1] {
-		o.Value += v
+func (o Oid) String() string {
+	return fmt.Sprintf("Oid: [Name %v, Class %v, Number %v.]\n", o.Name, o.Class, o.Number)
+}
+
+type oids []Oid
+
+func root(o oids) (oids, Oid, error) {
+	for i, v := range o {
+		if o.all(func(id Oid) bool {
+			return id.Class != v.Name
+		}) {
+			return append(o[:i], o[i+1:]...), v, nil
+		}
 	}
-	return
+	return oids{}, Oid{}, fmt.Errorf("root oid does not exist")
 }
 
-func (oid *Oid) Match(o Oid) (bool, error) {
-	return regexp.MatchString(oid.Value, o.Value)
-}
-
-func (oid *Oid) String() string {
-	return oid.Value
-}
-
-func NewOid(oid, name, class string, number int) (o Oid) {
-	o = Oid{
-		Value:  oid,
-		Name:   name,
-		Class:  class,
-		Number: number,
+func next(o oids) (oids, Oid, error) {
+	for i, v := range o {
+		if v.Class == v.Name {
+			return append(o[:i], o[i+1:]...), v, nil
+		}
 	}
-	return
+	return oids{}, Oid{}, fmt.Errorf("oid does not exist")
 }
 
-func ShortOid(oid string) (o Oid) {
-	slices := strings.Split(oid, separator)
-	o = Oid{
-		Value: oid,
-		Name: slices[len(slices)-1],
+func (o oids) all(fn func(id Oid) bool) bool {
+	for _, v := range o {
+		if !fn(v) {
+			return false
+		}
 	}
-	return
+	return true
 }

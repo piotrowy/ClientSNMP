@@ -1,19 +1,24 @@
 package main
 
 import (
-	"../pkg/mib"
+	"os"
 	"fmt"
 	"bufio"
-	"os"
+	"strconv"
+	"strings"
+
+	"../pkg/mib"
 )
 
-const RFC1213MIB  = "RFC1213-MIB"
+const (
+	RFC1213MIB = "RFC1213-MIB"
+	exit       = "exit"
+)
 
 func main() {
-	var t mib.Tree
-	if mib.Parse(&t, RFC1213MIB) {
+	if t, err := mib.Parse(RFC1213MIB); err == nil {
 		fmt.Print(t)
-		mainLoop(&t)
+		mainLoop(t)
 	}
 }
 
@@ -28,7 +33,22 @@ func mainLoop(t *mib.Tree) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		if line, err := reader.ReadString('\n'); err == nil {
-			fmt.Print(t.SubtreeString(mib.ShortOid(line)))
+			if strings.ToLower(line) == exit {
+				break
+			}
+
+			splitted := strings.Split(line, " ")
+			num, err := strconv.Atoi(splitted[0])
+
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Print(t.SubtreeString(mib.Oid{
+				Number: num,
+				Name:   splitted[1],
+				Class:  splitted[2],
+			}))
 		}
 	}
 }
