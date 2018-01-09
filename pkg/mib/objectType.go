@@ -23,6 +23,22 @@ func (o ObjectType) String() string {
 		o.Min, o.Max)
 }
 
+func (o ObjectType) name() string {
+	return o.Name
+}
+
+func (o ObjectType) class() string {
+	return o.Class
+}
+
+func (o ObjectType) number() int {
+	return o.Number
+}
+
+func (o ObjectType) repr() string {
+	return fmt.Sprintf("{%v}: {%v}", o.Number, o.Name)
+}
+
 type objectTypes []ObjectType
 
 func (ots objectTypes) next() (objectTypes, ObjectType, error) {

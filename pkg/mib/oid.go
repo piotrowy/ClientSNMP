@@ -14,6 +14,22 @@ func (o Oid) String() string {
 	return fmt.Sprintf("Oid: [Name %v, Class %v, Number %v]\n", o.Name, o.Class, o.Number)
 }
 
+func (o Oid) name() string {
+	return o.Name
+}
+
+func (o Oid) class() string {
+	return o.Class
+}
+
+func (o Oid) number() int {
+	return o.Number
+}
+
+func (o Oid) repr() string {
+	return fmt.Sprintf("{%v}: {%v}", o.Number, o.Name)
+}
+
 type oids []Oid
 
 func (o oids) next() (oids, Oid, error) {

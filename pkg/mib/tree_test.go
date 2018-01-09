@@ -4,14 +4,17 @@ import (
 	"testing"
 )
 
-var tr = New(Oid{
-	Name:   "internet",
-	Class:  "iso",
-	Number: 1,
-}, ObjectType{})
+func given() *Tree {
+	return New(Oid{
+		Name:   "internet",
+		Class:  "iso",
+		Number: 1,
+	}, ObjectType{})
+}
 
-func TestInsert(t *testing.T) {
+func TestInsertOid(t *testing.T) {
 	//when
+	tr := given()
 	tr.InsertOid(Oid{
 		Name:   "directory",
 		Class:  "internet",

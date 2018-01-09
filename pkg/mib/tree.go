@@ -18,13 +18,12 @@ type (
 	WalkFn func(n *node) bool
 )
 
-func New(oid Oid, val ObjectType) *Tree {
+func New(obj Object) *Tree {
 	return &Tree{
 		root: &node{
 			parent:   nil,
 			children: []*node{},
-			id:       oid,
-			val:      val,
+			val: obj,
 			height:   0,
 		},
 		size:          1,
@@ -40,78 +39,60 @@ func (t *Tree) Walk(fn WalkFn) {
 	recursiveDfsWalk(t.root, fn)
 }
 
-func (t *Tree) InsertOid(id Oid) {
-	t.insert(id, ObjectType{})
-}
-
-func (t *Tree) InsertObjectType(ot ObjectType) {
-	t.insert(Oid{}, ot)
-}
-
-func (t *Tree) insert(id Oid, val ObjectType) {
-	n, err := t.root.findByName(node{
-		id:  id,
-		val: val,
-	}.class())
+func (t *Tree) Insert(o Object) {
+	n, err := t.root.findByName(o.class())
 	if err == nil {
-		n.insert(id, val)
+		n.insert(o)
 		t.size += 1
 	}
 }
 
-func (t *Tree) Delete(id Oid, val ObjectType) {
-	n2 := node{
-		id:  id,
-		val: val,
-	}
-	n, err := t.root.findByName(n2.class())
+func (t *Tree) Delete(o Object) {
+	n, err := t.root.findByName(o.class())
 	if err != nil {
-		n.delete(n2)
+		n.delete(o)
 		t.size -= 1
 	}
 }
 
-func (t *Tree) FindByOid(id Oid) (Oid, ObjectType, error) {
-	n, err := t.root.findByOid(id)
-	return n.id, n.val, err
+func (t *Tree) FindByOid(id Oid) (Object, error) {
+	n, err := t.root.findByObject(id)
+	return n.val, err
 }
 
-func (t *Tree) FindByName(name string) (Oid, ObjectType, error) {
+func (t *Tree) FindByName(name string) (Object, error) {
 	n, err := t.root.findByName(name)
-	return n.id, n.val, err
+	return n.val, err
+}
+
+func (t *Tree) FindByValue(v string) (Object, error) {
+	n, err := t.root.findByValue(v)
+	return n.val, err
 }
 
 func (t *Tree) String() string {
-	return t.root.string(Oid{}, ObjectType{})
+	return t.root.string(Oid{})
 }
 
-func (t *Tree) SubtreeString(id Oid, ot ObjectType) string {
-	if _, _, err := t.FindByName(node{
-		id:  id,
-		val: ot,
-	}.name()); err != nil {
+func (t *Tree) SubtreeString(o Object) string {
+	if _, err := t.FindByName(o.name()); err != nil {
 		panic(err)
 	}
-	return t.root.string(id, ot)
+	return t.root.string(o)
 }
 
 type node struct {
 	parent   *node
 	children children
-	id       Oid
-	val      ObjectType
+	val      Object
 	height   int
 }
 
-func (n *node) insert(id Oid, val ObjectType) {
-	if n.indexOf(node{
-		id:  id,
-		val: val,
-	}) == -1 {
+func (n *node) insert(val Object) {
+	if n.indexOf(val) == -1 {
 		n.children = append(n.children, &node{
 			parent:   n,
 			children: []*node{},
-			id:       id,
 			val:      val,
 			height:   n.height + 1,
 		})
@@ -119,8 +100,8 @@ func (n *node) insert(id Oid, val ObjectType) {
 	}
 }
 
-func (n *node) delete(node node) {
-	i := n.indexOf(node)
+func (n *node) delete(o Object) {
+	i := n.indexOf(o)
 	if i >= 0 {
 		n.children = append(n.children[:i], n.children[i+1:]...)
 	}
@@ -128,14 +109,18 @@ func (n *node) delete(node node) {
 
 func (n *node) findByName(name string) (*node, error) {
 	return n.findBy(func(node node) bool {
-		return node.name() == name
+		return node.val.name() == name
 	})
 }
 
-func (n *node) findByOid(id Oid) (*node, error) {
+func (n *node) findByObject(o Object) (*node, error) {
 	return n.findBy(func(node node) bool {
-		return node.id == id
+		return node.val == o
 	})
+}
+
+func (n *node) findByValue(v string) (*node, error) {
+	return &node{}, nil
 }
 
 func (n *node) findBy(fn func(n1 node) bool) (*node, error) {
@@ -155,16 +140,13 @@ func (n *node) findBy(fn func(n1 node) bool) (*node, error) {
 	}
 }
 
-func (n *node) string(id Oid, ot ObjectType) string {
+func (n *node) string(o Object) string {
 	var buff bytes.Buffer
-	bfsWalk(n, func(n2 *node) bool {
-		str := fmt.Sprintf("%v=> %v\n", strings.Repeat(space, n2.height*4), n2.repr())
+	recursiveDfsWalk(n, func(node *node) bool {
+		str := fmt.Sprintf("%v=> %v\n", strings.Repeat(space, node.height*4), node.val.repr())
 		buff.WriteString(str)
-		if n2.name() == (node{
-			id:  id,
-			val: ot,
-		}.name()) {
-			n2.writeChildren(buff)
+		if node.val.name() == o.name() {
+			node.writeChildren(buff)
 			return true
 		}
 		return false
@@ -178,44 +160,17 @@ func (n *node) writeChildren(b bytes.Buffer) {
 		for i := 0; i < c.height; i++ {
 			b.WriteString("    ")
 		}
-		b.WriteString(fmt.Sprintf("=> %v", c.name()))
+		b.WriteString(fmt.Sprintf("=> %v", c.val.name()))
 	}
 }
 
-func (n *node) indexOf(node node) int {
+func (n *node) indexOf(o Object) int {
 	for i, v := range n.children {
-		if v.name() == node.name() {
+		if v.val.name() == o.name() {
 			return i
 		}
 	}
 	return -1
-}
-
-func (n node) name() (r string) {
-	if n.id != (Oid{}) {
-		r = n.id.Name
-	} else {
-		r = n.val.Name
-	}
-	return
-}
-
-func (n node) class() (r string) {
-	if n.id != (Oid{}) {
-		r = n.id.Class
-	} else {
-		r = n.val.Class
-	}
-	return
-}
-
-func (n node) repr() (r string) {
-	if n.id != (Oid{}) {
-		r = fmt.Sprintf("{%v}: {%v}", n.id.Number, n.id.Name)
-	} else {
-		r = fmt.Sprintf("{%v}: {%v}", n.val.Number, n.val.Name)
-	}
-	return
 }
 
 //recursiveWalk returns true if it should be aborted
@@ -251,7 +206,7 @@ func (c children) Len() int {
 }
 
 func (c children) Less(i, j int) bool {
-	return c[i].id.Number < c[j].id.Number
+	return c[i].val.number() < c[j].val.number()
 }
 
 func (c children) Swap(i, j int) {

@@ -113,11 +113,11 @@ func createTree(o oids, ot objectTypes, dt dataTypes) (*Tree, error) {
 	if err != nil {
 		return &Tree{}, err
 	}
-	t := New(root, ObjectType{})
+	t := New(root)
 
 	var oid Oid
 	for ; err == nil; o, oid, err = o.next() {
-		t.InsertOid(oid)
+		t.Insert(oid)
 	}
 	err = nil
 
@@ -130,7 +130,7 @@ func createTree(o oids, ot objectTypes, dt dataTypes) (*Tree, error) {
 		} else {
 			t.distinctTypes[objectType.Syntax] = emptyStruct{}
 		}
-		t.InsertObjectType(objectType)
+		t.Insert(objectType)
 	}
 
 	return t, nil

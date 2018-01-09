@@ -48,11 +48,3 @@ func read(f string) (string, error) {
 	bytes, err := ioutil.ReadFile(f)
 	return string(bytes), err
 }
-
-func mustRead(f string) string {
-	data, err := ioutil.ReadFile(f)
-	if err != nil {
-		panic(err)
-	}
-	return string(data)
-}
