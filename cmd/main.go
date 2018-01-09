@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"../pkg/mib"
+	"../pkg/snmp/mib"
 )
 
 const (
@@ -25,7 +25,7 @@ func main() {
 func mainLoop(t *mib.Tree) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Print(r)
+			fmt.Println(r)
 			mainLoop(t)
 		}
 	}()
@@ -33,7 +33,7 @@ func mainLoop(t *mib.Tree) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		if line, err := reader.ReadString('\n'); err == nil {
-			if strings.ToLower(line) == exit {
+			if strings.TrimSpace(strings.ToLower(line)) == exit {
 				break
 			}
 

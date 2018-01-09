@@ -9,13 +9,13 @@ func given() *Tree {
 		Name:   "internet",
 		Class:  "iso",
 		Number: 1,
-	}, ObjectType{})
+	})
 }
 
 func TestInsertOid(t *testing.T) {
 	//when
 	tr := given()
-	tr.InsertOid(Oid{
+	tr.Insert(Oid{
 		Name:   "directory",
 		Class:  "internet",
 		Number: 1,

@@ -1,6 +1,6 @@
 package assert
 
-type Predicate func () bool
+type Predicate func() bool
 
 func AssertP(p func() bool) {
 	if !p() {
