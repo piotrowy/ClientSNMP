@@ -24,3 +24,10 @@ func (o ObjectType) String() string {
 }
 
 type objectTypes []ObjectType
+
+func (ots objectTypes) next() (objectTypes, ObjectType, error) {
+	if len(ots) > 0 {
+		return ots[1:], ots[0], nil
+	}
+	return objectTypes{}, ObjectType{}, fmt.Errorf("no next type")
+}

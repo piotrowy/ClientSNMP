@@ -5,7 +5,6 @@ import (
 )
 
 type Oid struct {
-	Value  string
 	Name   string
 	Class  string
 	Number int

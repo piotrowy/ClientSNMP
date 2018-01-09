@@ -27,6 +27,10 @@ var (
 	commentRegex              = regexp.MustCompile("(?s)--.*?\\n")
 )
 
+type emptyStruct struct {
+
+}
+
 func Parse(mib string) (*Tree, error) {
 	var (
 		oids        oids
@@ -109,12 +113,26 @@ func createTree(o oids, ot objectTypes, dt dataTypes) (*Tree, error) {
 	if err != nil {
 		return &Tree{}, err
 	}
-
 	t := New(root, ObjectType{})
+
 	var oid Oid
 	for ; err == nil; o, oid, err = o.next() {
 		t.InsertOid(oid)
 	}
+	err = nil
+
+	var objectType ObjectType
+	for ; err == nil; ot, objectType, err = ot.next() {
+		if v, ok := dtMap[objectType.Syntax]; ok {
+			t.distinctTypes[v.BaseType] = emptyStruct{}
+			objectType.Min, objectType.Max = restrictionsFromSyntax(v.Restrictions)
+
+		} else {
+			t.distinctTypes[objectType.Syntax] = emptyStruct{}
+		}
+		t.InsertObjectType(objectType)
+	}
+
 	return t, nil
 }
 
