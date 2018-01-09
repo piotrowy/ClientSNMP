@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strings"
 	"strconv"
-	"fmt"
 )
 
 const (
@@ -101,8 +100,22 @@ func getDataTypes(data string, objectTypes objectTypes, elements map[string][]st
 }
 
 func createTree(o oids, ot objectTypes, dt dataTypes) (*Tree, error) {
-	fmt.Println(root(o))
-	return &Tree{}, nil
+	dtMap := make(map[string]DataType)
+	for _, v := range dt {
+		dtMap[v.Name] = v
+	}
+
+	o, root, err := o.next()
+	if err != nil {
+		return &Tree{}, err
+	}
+
+	t := New(root, ObjectType{})
+	var oid Oid
+	for ; err == nil; o, oid, err = o.next() {
+		t.InsertOid(oid)
+	}
+	return t, nil
 }
 
 func dataTypesFromFile(file string, types []string) (dts dataTypes) {
@@ -250,7 +263,7 @@ func (o oidLine) toOid() Oid {
 
 	num, _ := strconv.Atoi(splitted[len(splitted)-2])
 	return Oid{
-		Name:   strings.Split(strings.Trim(trimmed, "- "), space)[0],
+		Name:   strings.Split(strings.Trim(string(o), "- "), space)[0],
 		Class:  splitted[1],
 		Number: num,
 	}

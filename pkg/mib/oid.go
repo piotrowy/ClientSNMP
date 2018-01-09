@@ -12,29 +12,20 @@ type Oid struct {
 }
 
 func (o Oid) String() string {
-	return fmt.Sprintf("Oid: [Name %v, Class %v, Number %v.]\n", o.Name, o.Class, o.Number)
+	return fmt.Sprintf("Oid: [Name %v, Class %v, Number %v]\n", o.Name, o.Class, o.Number)
 }
 
 type oids []Oid
 
-func root(o oids) (oids, Oid, error) {
+func (o oids) next() (oids, Oid, error) {
 	for i, v := range o {
 		if o.all(func(id Oid) bool {
-			return id.Class != v.Name
+			return id.Name != v.Class
 		}) {
 			return append(o[:i], o[i+1:]...), v, nil
 		}
 	}
-	return oids{}, Oid{}, fmt.Errorf("root oid does not exist")
-}
-
-func next(o oids) (oids, Oid, error) {
-	for i, v := range o {
-		if v.Class == v.Name {
-			return append(o[:i], o[i+1:]...), v, nil
-		}
-	}
-	return oids{}, Oid{}, fmt.Errorf("oid does not exist")
+	return oids{}, Oid{}, fmt.Errorf("no next oid")
 }
 
 func (o oids) all(fn func(id Oid) bool) bool {
