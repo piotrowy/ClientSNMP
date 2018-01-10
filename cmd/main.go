@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"../pkg/snmp/mib"
+	"../pkg/snmp/ber"
 )
 
 const (
@@ -51,4 +52,5 @@ func mainLoop(t *mib.Tree) {
 			}))
 		}
 	}
+	ber.Encode("INTEGER", "-129")
 }
