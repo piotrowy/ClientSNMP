@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"../pkg/snmp/mib"
-	"../pkg/snmp/ber"
+	"./snmp/mib"
+	"./snmp/ber"
 )
 
 const (
