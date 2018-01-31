@@ -13,6 +13,14 @@ func TestEncodeInteger(t *testing.T) {
 	}
 }
 
+func TestEncodeLength(t *testing.T) {
+
+}
+
+func TestEncodeLengthBigInt(t *testing.T) {
+
+}
+
 func TestEncodeNull(t *testing.T) {
 	encoded := Encode(integer, "NULL")
 	expected := []byte{0x05, 0x00}
