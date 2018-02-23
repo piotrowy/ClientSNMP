@@ -1,7 +1,7 @@
 package ber
 
 type decodedTypeNode struct {
-	parent *decodedTypeNode
+	parent   *decodedTypeNode
 	children []*decodedTypeNode
-	value decodedType
+	value    decodedType
 }

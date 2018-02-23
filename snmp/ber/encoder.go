@@ -3,9 +3,9 @@ package ber
 import (
 	"bytes"
 	"encoding/binary"
+	"math"
 	"strconv"
 	"strings"
-	"math"
 )
 
 const (

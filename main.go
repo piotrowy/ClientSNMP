@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
-	"fmt"
 	"bufio"
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
-	"./snmp/mib"
 	"./snmp/ber"
+	"./snmp/mib"
 )
 
 const (

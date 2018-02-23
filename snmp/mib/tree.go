@@ -1,9 +1,9 @@
 package mib
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
-	"bytes"
 
 	"strings"
 )
@@ -23,7 +23,7 @@ func New(obj ObjectIdentifier) *Tree {
 		root: &node{
 			parent:   nil,
 			children: []*node{},
-			val: obj,
+			val:      obj,
 			height:   0,
 		},
 		size:          1,

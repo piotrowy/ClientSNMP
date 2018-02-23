@@ -2,8 +2,8 @@ package mib
 
 import (
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -28,7 +28,6 @@ var (
 )
 
 type emptyStruct struct {
-
 }
 
 func Parse(mib string) (*Tree, error) {

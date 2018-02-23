@@ -1,8 +1,8 @@
 package ber
 
 import (
-	"testing"
 	"bytes"
+	"testing"
 )
 
 func TestEncodeInteger(t *testing.T) {

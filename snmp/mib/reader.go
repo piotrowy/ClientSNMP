@@ -1,8 +1,8 @@
 package mib
 
 import (
-	"path/filepath"
 	"io/ioutil"
+	"path/filepath"
 )
 
 const (

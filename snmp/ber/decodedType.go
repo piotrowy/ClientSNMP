@@ -8,9 +8,9 @@ const (
 )
 
 type decodedType struct {
-	typeTagId int
+	typeTagId       int
 	visibilityClass int
-	data []byte
-	length uint32
-	isConstructed bool
+	data            []byte
+	length          uint32
+	isConstructed   bool
 }
