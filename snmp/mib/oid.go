@@ -10,24 +10,24 @@ type Oid struct {
 	Number int
 }
 
-func (o Oid) String() string {
-	return fmt.Sprintf("Oid: [Name %v, Class %v, Number %v]\n", o.Name, o.Class, o.Number)
-}
-
-func (o Oid) name() string {
+func (o Oid) GetName() string {
 	return o.Name
 }
 
-func (o Oid) class() string {
+func (o Oid) GetClass() string {
 	return o.Class
 }
 
-func (o Oid) number() int {
+func (o Oid) GetNumber() int {
 	return o.Number
 }
 
-func (o Oid) repr() string {
+func (o Oid) Representation() string {
 	return fmt.Sprintf("{%v}: {%v}", o.Number, o.Name)
+}
+
+func (o Oid) String() string {
+	return fmt.Sprintf("Oid: [Name %v, Class %v, Number %v]\n", o.Name, o.Class, o.Number)
 }
 
 type oids []Oid

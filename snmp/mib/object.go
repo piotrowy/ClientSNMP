@@ -1,9 +1,9 @@
 package mib
 
-type Object interface {
-	name() string
-	class() string
-	number() int
-	repr() string
+type ObjectIdentifier interface {
+	GetName() string
+	GetClass() string
+	GetNumber() int
+	Representation() string
 	String() string
 }

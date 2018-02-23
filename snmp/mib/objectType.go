@@ -16,27 +16,27 @@ type ObjectType struct {
 	Max         uint64
 }
 
+func (o ObjectType) GetName() string {
+	return o.Name
+}
+
+func (o ObjectType) GetClass() string {
+	return o.Class
+}
+
+func (o ObjectType) GetNumber() int {
+	return o.Number
+}
+
+func (o ObjectType) Representation() string {
+	return fmt.Sprintf("{%v}: {%v}", o.Number, o.Name)
+}
+
 func (o ObjectType) String() string {
 	return fmt.Sprintf("ObjectType: [Name %v, Syntax %v, Access %v, "+
 		"Status %v, Description %v, Class %v, Number %v, Min %v, Max %v.]\n",
 		o.Name, o.Syntax, o.Access, o.Status, o.Description, o.Class, o.Number,
 		o.Min, o.Max)
-}
-
-func (o ObjectType) name() string {
-	return o.Name
-}
-
-func (o ObjectType) class() string {
-	return o.Class
-}
-
-func (o ObjectType) number() int {
-	return o.Number
-}
-
-func (o ObjectType) repr() string {
-	return fmt.Sprintf("{%v}: {%v}", o.Number, o.Name)
 }
 
 type objectTypes []ObjectType
